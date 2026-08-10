@@ -8,6 +8,11 @@ export interface IFuncionario {
     status: 'pendente' | 'processando' | 'pago' | 'erro';
 }
 
+export interface IPagamentoResponse {
+  mensagem: string;
+  funcionario: Partial<IFuncionario>;
+}
+
 @Injectable({
     providedIn: 'root',
 })
@@ -31,7 +36,35 @@ export class PagamentosApi {
         );
     }
 
-    pagarFuncionario() {
+    pagarFuncionario(funcionario: IFuncionario): Observable<IPagamentoResponse> {
+      // Número entre 1000ms e 5000ms
+      const tempoAleatorio = Math.floor(Math.random() * 4000) + 1000;
 
+      const responseSucesso: IPagamentoResponse = {
+        mensagem: '✅ Funcionário pago com sucesso',
+        funcionario: {
+          id: funcionario.id,
+          nome: funcionario.nome,
+        },
+      };
+
+      return of(responseSucesso).pipe(
+        delay(tempoAleatorio),
+        map((pagamentoResponse)  => {
+          const { id, nome } = pagamentoResponse.funcionario;
+
+          if (id === 2) {
+            throw {
+              mensagem: `❌ Erro ao processar pagamento de ${nome}`,
+              funcionario: {
+                id,
+                nome,
+              },
+            }
+          }
+
+          return responseSucesso;
+        }),
+      );
     }
 }
