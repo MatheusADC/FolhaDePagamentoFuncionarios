@@ -1,6 +1,5 @@
-import { Component, computed, signal } from '@angular/core';
-import { from, tap, concatMap, map, catchError, of, defaultIfEmpty, endWith, finalize, delay, mergeMap } from 'rxjs';
-import { IFuncionario } from './pagamentos-api';
+import { Component, computed, inject, signal } from '@angular/core';
+import { IFuncionario, PagamentosApi } from './pagamentos-api';
 
 @Component({
   selector: 'app-folha-pagamentos',
@@ -9,6 +8,8 @@ import { IFuncionario } from './pagamentos-api';
   styleUrl: './folha-pagamentos.css',
 })
 export class FolhaPagamentos {
+  private readonly _pagamentosApi = inject(PagamentosApi);
+
   funcionarios = signal<IFuncionario[]>([]);
 
   consoleLogs = signal<string[]>(['Sistema pronto para iniciar.']);
@@ -17,6 +18,12 @@ export class FolhaPagamentos {
   funcionariosSelecionados = computed(() =>
     this.funcionarios().filter(f => f.selecionado)
   );
+
+  ngOnInit() {
+    this._pagamentosApi.getFuncionarios().subscribe(
+      (funcionariosResponse) => console.log('Funcionários: ', funcionariosResponse)
+    );
+  }
 
   toggleSelecao(id: number) {
 
