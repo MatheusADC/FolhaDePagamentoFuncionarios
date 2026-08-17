@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { IFuncionario, PagamentosApi } from './pagamentos-api';
-import { filter, map, switchMap } from 'rxjs';
+import { catchError, concatMap, filter, from, map, of, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-folha-pagamentos',
@@ -26,15 +26,26 @@ export class FolhaPagamentos {
     // );
 
     // Teste de pagamento de um único funcionário
+    // this._pagamentosApi.getFuncionarios().pipe(
+    //   map((funcionariosResponse) => funcionariosResponse.find((f) => f.id === 2)),
+    //   filter((funcionario) => funcionario !== undefined),
+    //   switchMap((funcionario) => this._pagamentosApi.pagarFuncionario(funcionario)),
+    // )
+    // .subscribe({
+    //   next: (response) => console.log('Pagamento: ', response),
+    //   error: (erro) => console.log('Erro no pagamento: ', erro),
+    // });
+
+    // Teste do pagamento de todos os funcionários
     this._pagamentosApi.getFuncionarios().pipe(
-      map((funcionariosResponse) => funcionariosResponse.find((f) => f.id === 2)),
-      filter((funcionario) => funcionario !== undefined),
-      switchMap((funcionario) => this._pagamentosApi.pagarFuncionario(funcionario)),
+      tap((funcionarios) => console.log('Lista de funcionários: ', funcionarios)),
+      switchMap((funcionarios) => from(funcionarios)),
+      tap((funcionario) => console.log('Funcionário atual: ', funcionario)),
+      concatMap((funcionario) => this._pagamentosApi.pagarFuncionario(funcionario).pipe(
+        catchError((erroPagamento) => of(erroPagamento))
+      )),
     )
-    .subscribe({
-      next: (response) => console.log('Pagamento: ', response),
-      error: (erro) => console.log('Erro no pagamento: ', erro),
-    });
+      .subscribe((pagamentoResponse) => console.log('Pagemento: ', pagamentoResponse));
   }
 
   toggleSelecao(id: number) {
