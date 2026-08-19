@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { delay, map, Observable, of } from "rxjs";
+import { concatMap, delay, map, Observable, of, throwError } from "rxjs";
 
 export interface IFuncionario {
     id: number;
@@ -21,6 +21,7 @@ export class PagamentosApi {
       // Número entre 1000ms e 5000ms
       const tempoAleatorio = Math.floor(Math.random() * 4000) + 1000;
 
+      if (tempoAleatorio > 4000) {
         return of([
           { id: 0, nome: 'Ana Clara' },
           { id: 1, nome: 'Luiz Carlos' },
@@ -30,10 +31,16 @@ export class PagamentosApi {
           delay(tempoAleatorio),
           map((funcionarios) => {
             return funcionarios.map(
-              (funcionario) => ({... funcionario, selecionado: true, status: 'pendente' } as IFuncionario)
+              (funcionario) => ({ ...funcionario, selecionado: true, status: 'pendente' } as IFuncionario)
             )
           })
         );
+      } else {
+        return of(true).pipe(
+          delay(2000),
+          concatMap(() => throwError(() => 'Ocorreu um erro sistêmico')),
+        );
+      }
     }
 
     pagarFuncionario(funcionario: IFuncionario): Observable<IPagamentoResponse> {
