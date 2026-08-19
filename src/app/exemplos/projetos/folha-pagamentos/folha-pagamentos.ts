@@ -56,4 +56,8 @@ export class FolhaPagamentos {
   private resetarStatus() {
 
   }
+
+  recarregarFuncionarios() {
+    this.funcionariosResource.reload();
+  }
 }
