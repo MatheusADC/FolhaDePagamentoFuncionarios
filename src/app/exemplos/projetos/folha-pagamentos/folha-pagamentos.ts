@@ -29,6 +29,16 @@ export class FolhaPagamentos {
     return [];
   });
 
+  funcionariosMensagemErro = computed(() => {
+    const ERRO_FUNCIONARIOS = this.funcionariosResource.error();
+
+    if (ERRO_FUNCIONARIOS && ERRO_FUNCIONARIOS.cause) {
+      return ERRO_FUNCIONARIOS.cause;
+    }
+
+    return 'Ocorreu um erro inesperado';
+  });
+
   funcionariosSelecionados = computed(() => {
     if (this.funcionariosResource.hasValue()) {
       return this.funcionariosResource.value().filter(f => f.selecionado);
