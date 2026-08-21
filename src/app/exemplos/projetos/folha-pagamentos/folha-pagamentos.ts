@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { IFuncionario, PagamentosApi } from './pagamentos-api';
 import { rxResource } from '@angular/core/rxjs-interop';
 
@@ -19,9 +19,7 @@ export class FolhaPagamentos {
     stream: () => this._pagamentosApi.getFuncionarios(),
   });
 
-  funcionarios = computed(() => {
-    console.log('Funcionários Resource: ', this.funcionariosResource.hasValue());
-
+  funcionarios = linkedSignal(() => {
     if (this.funcionariosResource.hasValue()) {
       return this.funcionariosResource.value();
     }
@@ -40,15 +38,23 @@ export class FolhaPagamentos {
   });
 
   funcionariosSelecionados = computed(() => {
-    if (this.funcionariosResource.hasValue()) {
-      return this.funcionariosResource.value().filter(f => f.selecionado);
+    if (this.funcionarios().length > 0) {
+      return this.funcionarios().filter(f => f.selecionado);
     }
 
     return [];
   });
 
-  toggleSelecao(id: number) {
+  toggleSelecao(funcionarioId: number) {
+    this.funcionarios.update((funcionarios) => {
+      return funcionarios.map((f) => {
+        if (f.id === funcionarioId) {
+          return { ...f, selecionado: !f.selecionado };
+        }
 
+        return f;
+      });
+    });
   }
 
   iniciarPagamentos() {
