@@ -6,7 +6,7 @@
         @if (funcionariosResource.status() === 'loading' || funcionariosResource.status() === 'reloading') {
           <p class="text-xl font-bold text-amber-500">Carregando funcionários...</p>
         } @else if (funcionariosResource.status() === 'error') {
-          <p class="text-xl font-bold text-amber-500">Erro ao carregar funcionários 😭</p>
+          <p class="text-xl font-bold text-amber-500">{{ funcionariosMensagemErro() }} 😭</p>
           <button
             class="py-1 px-3 text-xs font-semibold text-white bg-blue-600 rounded-md cursor-pointer"
             (click)="recarregarFuncionarios()"
