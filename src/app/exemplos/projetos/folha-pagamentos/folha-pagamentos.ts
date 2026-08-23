@@ -2,6 +2,11 @@ import { Component, computed, inject, linkedSignal, signal } from '@angular/core
 import { IFuncionario, PagamentosApi } from './pagamentos-api';
 import { rxResource } from '@angular/core/rxjs-interop';
 
+export interface IMensagemConsole {
+  msg: string;
+  tipo: 'sucesso' | 'alerta' | 'erro';
+}
+
 @Component({
   selector: 'app-folha-pagamentos',
   imports: [],
@@ -11,7 +16,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 export class FolhaPagamentos {
   private readonly _pagamentosApi = inject(PagamentosApi);
 
-  consoleLogs = signal<string[]>(['Sistema pronto para iniciar.']);
+  consoleLogs = signal<IMensagemConsole[]>([{ msg: 'Sistema pronto para iniciar.', tipo: 'sucesso' }]);
   processando = signal(false);
 
   funcionariosResource = rxResource({
@@ -65,8 +70,10 @@ export class FolhaPagamentos {
 
   }
 
-  private addLog(msg: string) {
-
+  private addLog(mensagem: IMensagemConsole) {
+    this.consoleLogs.update((logs) => {
+      return [...logs, mensagem];
+    });
   }
 
   private resetarStatus() {
