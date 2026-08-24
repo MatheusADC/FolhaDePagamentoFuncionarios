@@ -67,7 +67,15 @@ export class FolhaPagamentos {
   }
 
   private atualizarStatus(id: number, novoStatus: IFuncionario['status']) {
+    this.funcionarios.update((funcionarios) => {
+      return funcionarios.map((f) => {
+        if (f.id === id) {
+          return {...f, status: novoStatus };
+        }
 
+        return f;
+      });
+    });
   }
 
   private addLog(mensagem: IMensagemConsole) {
@@ -77,7 +85,11 @@ export class FolhaPagamentos {
   }
 
   private resetarStatus() {
-
+    this.funcionarios.update((funcionarios) => {
+      return funcionarios.map((f) => {
+        return {...f, status: 'pendente'};
+      });
+    });
   }
 
   recarregarFuncionarios() {
