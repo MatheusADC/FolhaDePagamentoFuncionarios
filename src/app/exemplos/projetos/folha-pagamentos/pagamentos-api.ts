@@ -22,14 +22,14 @@ export class PagamentosApi {
       // Número entre 1000ms e 5000ms
       const tempoAleatorio = Math.floor(Math.random() * 4000) + 1000;
 
-      if (tempoAleatorio > 4000) {
+      if (true) {
         return of([
           { id: 0, nome: 'Ana Clara' },
           { id: 1, nome: 'Luiz Carlos' },
           { id: 2, nome: 'Rodrigo Silva' },
           { id: 3, nome: 'Ricardo Alves' },
         ]).pipe(
-          delay(tempoAleatorio),
+          delay(100),
           map((funcionarios) => {
             return funcionarios.map(
               (funcionario) => ({ ...funcionario, selecionado: true, status: 'pendente' } as IFuncionario)
@@ -62,9 +62,6 @@ export class PagamentosApi {
     }
 
     pagarFuncionario(funcionario: IFuncionario): Observable<IPagamentoResponse> {
-      // Número entre 1000ms e 5000ms
-      const tempoAleatorio = Math.floor(Math.random() * 4000) + 1000;
-
       const responseSucesso: IPagamentoResponse = {
         mensagem: '✅ Funcionário pago com sucesso',
         funcionario: {
@@ -73,22 +70,32 @@ export class PagamentosApi {
         },
       };
 
-      return of(responseSucesso).pipe(
-        delay(tempoAleatorio),
-        map((pagamentoResponse)  => {
-          const { id, nome } = pagamentoResponse.funcionario;
+      const simulacaoErroHttp = new HttpErrorResponse({
+        error: {
+            mensagem: 'Conta bloqueada.',
+            codigoInterno: 'ERR_FUNC_400',
+          },
+          status: 400,
+          statusText: 'Bad request',
+          url: 'https://api.suaempresa.com.br/v1/funcionarios/pagamento',
+      });
 
-          if (id === 2) {
-            throw {
-              mensagem: `❌ Erro ao processar pagamento de ${nome}`,
-              funcionario: {
-                id,
-                nome,
-              },
-            }
+      return of(responseSucesso).pipe(
+        delay(2000),
+        map((response) => {
+          if (response.funcionario.id === 2) {
+            throw simulacaoErroHttp;
           }
 
-          return responseSucesso;
+          return response;
+        }),
+        catchError((erro: HttpErrorResponse) => {
+          const pagamentoResponseErro: IPagamentoResponse = {
+            mensagem: erro.status === 400 ? erro.error.mensagem : 'Ocorreu um erro inesperado.',
+            funcionario,
+          };
+
+          return throwError(() => pagamentoResponseErro);
         }),
       );
     }
