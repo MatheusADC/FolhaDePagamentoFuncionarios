@@ -1,6 +1,8 @@
+import { catchError, concatMap, EMPTY, finalize, tap } from 'rxjs';
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { IFuncionario, PagamentosApi } from './pagamentos-api';
+import { IFuncionario, IPagamentoResponse, PagamentosApi } from './pagamentos-api';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { from } from 'rxjs';
 
 export interface IMensagemConsole {
   msg: string;
@@ -63,7 +65,41 @@ export class FolhaPagamentos {
   }
 
   iniciarPagamentos() {
+    this.consoleLogs.set([{ msg: 'Iniciando comunicação com o banco...', tipo: 'alerta' }]);
+    this.resetarStatus();
+    this.processando.set(true);
 
+    const LISTA_SELECIONADOS_VAZIA = this.funcionariosSelecionados().length === 0;
+
+    if (LISTA_SELECIONADOS_VAZIA) {
+      this.addLog({ msg: '⚠️ AVISO: Nenhum funcionário selecionado no lote.', tipo: 'alerta'});
+      this.processando.set(false);
+      return;
+    }
+
+    from(this.funcionariosSelecionados()).pipe(
+      concatMap((f) => {
+        this.atualizarStatus(f.id, 'processando');
+        this.addLog({  msg: `Processando paragamento de: ${f.nome}...`, tipo: 'sucesso' });
+
+        return this._pagamentosApi.pagarFuncionario(f).pipe(
+          tap(() => {
+            this.atualizarStatus(f.id, 'pago');
+            this.addLog({ msg: `✅ Pagamento confirmado: ${f.nome}`, tipo: 'sucesso' });
+          }),
+          catchError((erro: IPagamentoResponse) => {
+            this.atualizarStatus(f.id, 'erro');
+            this.addLog({ msg: `❌ Erro no pagamento para ${f.nome}: ${erro.mensagem}`, tipo: 'erro' });
+
+            return EMPTY;
+          }),
+        );
+      }),
+      finalize(() => {
+        this.addLog({ msg: '🏁 Procesamento de pagamentos encerrado.', tipo: 'sucesso' });
+        this.processando.set(false);
+      }),
+    ).subscribe();
   }
 
   private atualizarStatus(id: number, novoStatus: IFuncionario['status']) {
