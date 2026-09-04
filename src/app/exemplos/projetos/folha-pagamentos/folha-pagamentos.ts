@@ -1,4 +1,4 @@
-import { catchError, concatMap, EMPTY, finalize, tap } from 'rxjs';
+import { catchError, concatMap, EMPTY, finalize, retry, tap, timer } from 'rxjs';
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { IFuncionario, IPagamentoResponse, PagamentosApi } from './pagamentos-api';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -83,6 +83,13 @@ export class FolhaPagamentos {
         this.addLog({  msg: `Processando paragamento de: ${f.nome}...`, tipo: 'sucesso' });
 
         return this._pagamentosApi.pagarFuncionario(f).pipe(
+          retry({
+            count: 2,
+            delay: (erro, numeroDeTentativas) => {
+              this.addLog({ msg: `⚠️ Falha na tentativa ${numeroDeTentativas}. Retentando pagamento de ${f.nome}`, tipo: 'alerta' });
+              return timer(1000);
+            },
+          }),
           tap(() => {
             this.atualizarStatus(f.id, 'pago');
             this.addLog({ msg: `✅ Pagamento confirmado: ${f.nome}`, tipo: 'sucesso' });
