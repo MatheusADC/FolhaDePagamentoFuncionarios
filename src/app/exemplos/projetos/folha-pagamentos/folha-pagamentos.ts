@@ -1,4 +1,4 @@
-import { catchError, concatMap, EMPTY, finalize, retry, tap, timer } from 'rxjs';
+import { catchError, concatMap, EMPTY, finalize, mergeMap, retry, tap, timer } from 'rxjs';
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { IFuncionario, IPagamentoResponse, PagamentosApi } from './pagamentos-api';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -78,7 +78,7 @@ export class FolhaPagamentos {
     }
 
     from(this.funcionariosSelecionados()).pipe(
-      concatMap((f) => {
+      mergeMap((f) => {
         this.atualizarStatus(f.id, 'processando');
         this.addLog({  msg: `Processando paragamento de: ${f.nome}...`, tipo: 'sucesso' });
 
